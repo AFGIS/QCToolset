@@ -16,10 +16,13 @@ for geodatabase in input_geodatabases:
         for field in fields:
             #arcpy.AddMessage('Domains {0} .'.format(field.domain))
             if field.domain is not None:
-                arcpy.AddMessage('Domain {0} for field {1}.'.format(field.domain, field))
+                arcpy.AddMessage('Field {0}.'.format(field.domain))
                 if field.domain in domains:
-                    if field.domain.domainType == 'CodedValue':
-                        coded_values = field.domain.codedValues
+                    #arcpy.AddMessage('Field {0}.'.format(field.name))
+                    index = domains.index(field.domain)
+                    arcpy.AddMessage('Domain {0} for field {1}.'.format(domains[index].name, field))
+                    if domains[index].domainType == 'CodedValue':
+                        coded_values = domains[index].codedValues
                         with arcpy.da.SearchCursor(dataset, ["OID@", field]) as cursor:
 
                             for row in cursor:
@@ -30,10 +33,10 @@ for geodatabase in input_geodatabases:
                                     errors += 1
 
 
-                    elif field.domain.domainType == 'Range':
+                    elif domains[index].domainType == 'Range':
                         with arcpy.da.SearchCursor(dataset, ["OID@", field]) as cursor:
                             for row in cursor:
-                                if not ((row[1] > field.domain.range[0]) and (row[1] < field.domain.range[1])):
+                                if not ((row[1] > domains[index].range[0]) and (row[1] < domains[index].range[1])):
                                     arcpy.AddMessage('Row {0} has values that are not within the domain.'.format(row[0]))
                                     errors += 1
         desc = arcpy.Describe(dataset)
