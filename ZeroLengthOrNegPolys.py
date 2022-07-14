@@ -3,6 +3,8 @@ import arcpy
 input_polygons = arcpy.GetParameter(0)
 input_polylines = arcpy.GetParameter(1)
 
+
+
 for line_layer in input_polylines:
     errors = 0
     with arcpy.da.SearchCursor(line_layer, ["OID@","SHAPE@LENGTH"]) as cursor:
