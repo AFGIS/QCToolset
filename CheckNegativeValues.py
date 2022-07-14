@@ -7,4 +7,4 @@ for raster in input_rasters:
     minimum_value = arcpy.management.GetRasterProperties(raster, property_type="MINIMUM")
     result = minimum_value.getOutput(0)
     if float(result) < 0:
-        arcpy.AddMessage("{0} has has negative values".format(raster))
+        arcpy.AddMessage("{0} has negative values".format(raster))

@@ -1,43 +1,51 @@
 import arcpy
+import os
 
 input_geodatabases = arcpy.GetParameter(0)
 
 for geodatabase in input_geodatabases:
-    arcpy.env.workspace = geodatabase
+    env = arcpy.env.workspace = geodatabase
     domains = arcpy.da.ListDomains(geodatabase)
+    arcpy.AddMessage('Original Workspace: {0}.'.format(arcpy.env.workspace))
     #arcpy.AddMessage('Domains {0} .'.format(domains))
-    datasets = arcpy.ListFeatureClasses("*", "All")
-    #arcpy.AddMessage('Datasets {0} .'.format(datasets))
-
+    datasets = arcpy.ListDatasets()
     for dataset in datasets:
-        fields = arcpy.ListFields(dataset, "*", "All")
-        #arcpy.AddMessage('Fields {0} .'.format(fields))
-        errors = 0
-        for field in fields:
-            #arcpy.AddMessage('Domains {0} .'.format(field.domain))
-            if field.domain is not None:
-                arcpy.AddMessage('Field {0}.'.format(field.domain))
-                if field.domain in domains:
-                    #arcpy.AddMessage('Field {0}.'.format(field.name))
-                    index = domains.index(field.domain)
-                    arcpy.AddMessage('Domain {0} for field {1}.'.format(domains[index].name, field))
-                    if domains[index].domainType == 'CodedValue':
-                        coded_values = domains[index].codedValues
-                        with arcpy.da.SearchCursor(dataset, ["OID@", field]) as cursor:
-
-                            for row in cursor:
-                                arcpy.AddMessage('Row {0} .'.format(row[1]))
-                                if row[1] not in coded_values:
-                                    arcpy.AddMessage(
-                                        'Row {0} has values that are not within the domain.'.format(row[0]))
-                                    errors += 1
-
-
-                    elif domains[index].domainType == 'Range':
-                        with arcpy.da.SearchCursor(dataset, ["OID@", field]) as cursor:
-                            for row in cursor:
-                                if not ((row[1] > domains[index].range[0]) and (row[1] < domains[index].range[1])):
-                                    arcpy.AddMessage('Row {0} has values that are not within the domain.'.format(row[0]))
-                                    errors += 1
-        desc = arcpy.Describe(dataset)
-        arcpy.AddMessage('Dataset {0} has {1} errors found.'.format(desc.name, errors))
+        arcpy.AddMessage('Datasets {0} .'.format(dataset))
+    for dataset in datasets:
+        arcpy.env.workspace = str(env) + "\\" + dataset
+        arcpy.AddMessage('Workspace: {0}.'.format(arcpy.env.workspace))
+        feature_classes = arcpy.ListFeatureClasses()
+        arcpy.AddMessage('Feature Classes {0} .'.format(feature_classes))
+        for feature_class in feature_classes:
+            fields = arcpy.ListFields(feature_class, "*", "All")
+            #arcpy.AddMessage('Fields {0} .'.format(fields))
+            errors = 0
+            for field in fields:
+                #arcpy.AddMessage('Field name: {0} .'.format(field.name))
+                if field.domain != "":
+                    arcpy.AddMessage('Field domain: {0}.'.format(field.domain))
+                    for domain in domains:
+                        if field.domain == domain.name:
+                            arcpy.AddMessage('Domain found in list. {0}.'.format(field.domain))
+                            if domain.domainType == 'CodedValue':
+                                arcpy.AddMessage('Domain is Coded {0} .'.format(domain.name))
+                                coded_values = domain.codedValues
+                                arcpy.AddMessage('Coded Values: {0} .'.format(coded_values))
+                                arcpy.AddMessage('Field name: {0} .'.format(field.name))
+                                with arcpy.da.SearchCursor(feature_class, ["OID@", field.name]) as cursor:
+                                    for row in cursor:
+                                        arcpy.AddMessage('Row: {0} .'.format(row[0]))
+                                        if row[1] not in coded_values:
+                                            arcpy.AddMessage(
+                                                'Row {0} has values that are not within the domain.'.format(row[0]))
+                                            errors += 1
+                            elif domain.domainType == 'Range':
+                                arcpy.AddMessage('Domain is Ranged {0} .'.format(domain.name))
+                                with arcpy.da.SearchCursor(feature_class, ["OID@", field.name]) as cursor:
+                                    for row in cursor:
+                                        if not ((row[1] > domain.range[0]) and (row[1] < domain.range[1])):
+                                            arcpy.AddMessage(
+                                                'Row {0} has values that are not within the domain.'.format(row[0]))
+                                            errors += 1
+            arcpy.AddMessage('Feature class: {0} has {1} errors found.'.format(feature_class, errors))
+        del feature_classes
