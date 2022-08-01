@@ -38,8 +38,9 @@ for geodatabase in input_geodatabases:
                                     if arcpy.Exists(cursor):
                                         arcpy.AddMessage("Cursor Exists")
                                     for f in cursor:
-                                        arcpy.AddMessage('Row: {0} .'.format(f[0]))
-                                        if f[1] not in coded_values:
+                                        #arcpy.AddMessage('Row: {0}'.format(f[0]))
+                                        value = str(f[1])
+                                        if value not in coded_values:
                                             arcpy.AddMessage(
                                                 'Row {0} has values that are not within the domain.'.format(row[0]))
                                             errors += 1

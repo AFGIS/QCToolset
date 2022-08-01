@@ -1,10 +1,15 @@
 import arcpy
 
-dataset = arcpy.GetParameter(0)
-input_fields = arcpy.GetParameterAsText(1).split(";")
+apply_to_all = arcpy.GetParameter(0)
+dataset = arcpy.GetParameter(1)
+
+if apply_to_all:
+    input_fields =[f.name for f in arcpy.ListFields(dataset)]
+else:
+    input_fields = arcpy.GetParameterAsText(2).split(";")
 arcpy.AddMessage('Fields: {0} '.format(input_fields))
-sentence_case = arcpy.GetParameter(2)
-remove_spaces = arcpy.GetParameter(3)
+sentence_case = arcpy.GetParameter(3)
+remove_spaces = arcpy.GetParameter(4)
 
 
 
